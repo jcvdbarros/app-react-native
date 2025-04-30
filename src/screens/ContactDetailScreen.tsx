@@ -5,8 +5,10 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
+import { useContact } from "../contexts/ContactContext";
 
 interface ContactDetailRouteParams {
   id: string;
@@ -18,6 +20,7 @@ interface ContactDetailRouteParams {
 export default function ContactDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
+  const { updateContact } = useContact();
   const { name, email, phone } = route.params as ContactDetailRouteParams;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -25,11 +28,33 @@ export default function ContactDetailScreen() {
   const [editedEmail, setEditedEmail] = useState(email);
   const [editedPhone, setEditedPhone] = useState(phone);
 
+  const handleUpdate = async () => {
+    try {
+      await updateContact({
+        _id: (route.params as ContactDetailRouteParams)._id,
+        name: editedName,
+        email: editedEmail,
+        phone: editedPhone,
+      });
+      setIsEditing(false);
+      Alert.alert("Contato atualizado com sucesso");
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível atualizar o contato.");
+    }
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity
-          onPress={() => setIsEditing((prev) => !prev)}
+          onPress={() => {
+            if (isEditing) {
+              handleUpdate();
+            } else {
+              setIsEditing(true);
+            }
+          }}
           style={{ marginRight: 10 }}
         >
           <Text style={{ color: "blue" }}>
@@ -78,10 +103,7 @@ export default function ContactDetailScreen() {
       )}
 
       {isEditing && (
-        <TouchableOpacity
-          onPress={() => setIsEditing(false)}
-          style={styles.saveButton}
-        >
+        <TouchableOpacity onPress={handleUpdate} style={styles.saveButton}>
           <Text style={styles.saveButtonText}>Salvar</Text>
         </TouchableOpacity>
       )}

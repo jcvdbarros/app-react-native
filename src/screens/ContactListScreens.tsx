@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,61 +7,61 @@ import {
   TouchableOpacity,
   StyleSheet,
   LayoutAnimation,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-
-interface Contact {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-}
-
-const MOCK_CONTACTS: Contact[] = [
-  {
-    id: "1",
-    name: "João Silva",
-    email: "",
-    phone: "123456789",
-  },
-  {
-    id: "2",
-    name: "Maria Oliveira",
-    email: "",
-    phone: "987654321",
-  },
-  {
-    id: "3",
-    name: "Pedro Santos",
-    email: "",
-    phone: "456789123",
-  },
-  {
-    id: "4",
-    name: "Ana Costa",
-    email: "",
-    phone: "321654987",
-  },
-  {
-    id: "5",
-    name: "Lucas Almeida",
-    email: "",
-    phone: "654321789",
-  },
-];
+import { useContact } from "../contexts/ContactContext";
 
 export default function ContactListScreen() {
   const navigation = useNavigation<any>();
   const [search, setSearch] = useState("");
-  const [contacts, setContacts] = useState<Contact[]>(MOCK_CONTACTS);
+  const { loadContacts, contacts, deleteContact } = useContact();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await loadContacts();
+      } catch (err) {
+        setError("Erro ao carregar contatos");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContacts();
+  }, []);
+  useEffect(() => {}, [contacts]);
   const filteredContacts = contacts.filter((contact) =>
     contact.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: any) => {
+    try {
+      Alert.alert(
+        "Excluir Contato",
+        "Você tem certeza que deseja excluir este contato?",
+        [
+          {
+            text: "Cancelar",
+            style: "cancel",
+          },
+          {
+            text: "Excluir",
+            onPress: async () => {
+              await deleteContact(id);
+              Alert.alert("Contato excluído com sucesso");
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível excluir o contato." + error);
+    }
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setContacts((prev) => prev.filter((contact) => contact.id !== id));
   };
 
   return (
@@ -73,14 +73,22 @@ export default function ContactListScreen() {
         style={styles.searchInput}
       />
 
-      {!filteredContacts.length ? (
+      {loading ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Carregando...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>{error}</Text>
+        </View>
+      ) : !filteredContacts.length ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Nenhum contato encontrado.</Text>
         </View>
       ) : (
         <FlatList
           data={filteredContacts}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => `${item._id}`}
           renderItem={({ item }) => (
             <View style={styles.contactItem}>
               <View style={{ flex: 1 }}>
@@ -92,7 +100,7 @@ export default function ContactListScreen() {
               >
                 <Text style={{ color: "blue", marginLeft: 10 }}>Ver</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDelete(item.id)}>
+              <TouchableOpacity onPress={() => handleDelete(item._id)}>
                 <Text style={{ color: "red", marginLeft: 10 }}>Excluir</Text>
               </TouchableOpacity>
             </View>

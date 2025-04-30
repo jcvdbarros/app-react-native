@@ -1,6 +1,9 @@
 import { View, StyleSheet, TextInput, Button, Text, Alert } from "react-native";
 import { Formik } from "formik";
 import * as Yup from "yup";
+import { useContact } from "../contexts/ContactContext";
+import mongoose, { ObjectId } from "mongoose";
+import { useNavigation } from "@react-navigation/native";
 
 const ContactSchema = Yup.object().shape({
   name: Yup.string().required("Nome é obrigatório"),
@@ -9,15 +12,27 @@ const ContactSchema = Yup.object().shape({
 });
 
 export default function ContactFormScreen() {
-  const handleSubmit = (values: {
+  const { goBack } = useNavigation();
+  const { addContact } = useContact();
+  const handleSubmit = async (values: {
     name: string;
     email: string;
     phone: string;
   }) => {
-    Alert.alert(
-      "Contato salvo",
-      `Nome: ${values.name}\nEmail: ${values.email}\nTelefone: ${values.phone}`
-    );
+    try {
+      await addContact({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+      });
+      Alert.alert(
+        "Contato salvo",
+        `Nome: ${values.name}\nEmail: ${values.email}\nTelefone: ${values.phone}`
+      );
+      goBack();
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível salvar o contato." + error);
+    }
   };
 
   return (

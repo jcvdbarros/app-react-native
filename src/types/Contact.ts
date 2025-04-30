@@ -1,5 +1,7 @@
+import { ObjectId } from "mongoose";
+
 export interface Contact {
-  id: string;
+  _id?: ObjectId;
   name: string;
   email: string;
   phone: string;

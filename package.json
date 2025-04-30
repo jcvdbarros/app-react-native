@@ -15,6 +15,7 @@
     "expo": "~52.0.46",
     "expo-status-bar": "~2.0.1",
     "formik": "^2.4.6",
+    "mongoose": "^8.14.1",
     "react": "18.3.1",
     "react-native": "0.76.9",
     "react-native-safe-area-context": "^5.4.0",
@@ -22,6 +23,7 @@
     "react-navigation": "^5.0.0",
     "react-navigation-stack": "^2.10.4",
     "reanimated": "^0.0.1-alpha",
+    "uuid": "^11.1.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {
