@@ -4,7 +4,7 @@ import api from "../services/api";
 
 interface ContactContextData {
   contacts: Contact[];
-  loadContacts: () => Promise<void>;
+  loadContacts: (name?: string) => Promise<void>;
   addContact: (contact: Contact) => Promise<void>;
   updateContact: (contact: Contact) => Promise<void>;
   deleteContact: (id: string) => Promise<void>;
@@ -17,9 +17,11 @@ export const ContactProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
 
-  const loadContacts = async () => {
+  const loadContacts = async (name: string = "") => {
     try {
-      const response = await api.get("/contacts");
+      const response = await api.get("/contacts", {
+        params: { name },
+      });
       if (Array.isArray(response.data)) {
         setContacts(response.data);
       } else {

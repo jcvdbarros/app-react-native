@@ -15,16 +15,25 @@ import { useContact } from "../contexts/ContactContext";
 export default function ContactListScreen() {
   const navigation = useNavigation<any>();
   const [search, setSearch] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const { loadContacts, contacts, deleteContact } = useContact();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      setSearch(inputValue);
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [inputValue]);
 
   useEffect(() => {
     const fetchContacts = async () => {
       try {
         setLoading(true);
         setError(null);
-        await loadContacts();
+        await loadContacts(search);
       } catch (err) {
         setError("Erro ao carregar contatos");
       } finally {
@@ -33,11 +42,7 @@ export default function ContactListScreen() {
     };
 
     fetchContacts();
-  }, []);
-  useEffect(() => {}, [contacts]);
-  const filteredContacts = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(search.toLowerCase())
-  );
+  }, [search]);
 
   const handleDelete = (id: any) => {
     try {
@@ -68,8 +73,8 @@ export default function ContactListScreen() {
     <View style={styles.container}>
       <TextInput
         placeholder="Pesquisar contato..."
-        value={search}
-        onChangeText={setSearch}
+        value={inputValue}
+        onChangeText={setInputValue}
         style={styles.searchInput}
       />
 
@@ -81,19 +86,16 @@ export default function ContactListScreen() {
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>{error}</Text>
         </View>
-      ) : !filteredContacts.length ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Nenhum contato encontrado.</Text>
-        </View>
       ) : (
         <FlatList
-          data={filteredContacts}
+          data={contacts}
           keyExtractor={(item) => `${item._id}`}
           renderItem={({ item }) => (
             <View style={styles.contactItem}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.contactName}>{item.name}</Text>
                 <Text>{item.phone}</Text>
+                <Text>{item.email}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => navigation.navigate("Detail", item)}
@@ -105,6 +107,11 @@ export default function ContactListScreen() {
               </TouchableOpacity>
             </View>
           )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhum contato encontrado</Text>
+            </View>
+          }
         />
       )}
 

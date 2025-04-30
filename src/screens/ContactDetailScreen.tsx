@@ -9,9 +9,10 @@ import {
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useContact } from "../contexts/ContactContext";
+import { ObjectId } from "mongoose";
 
 interface ContactDetailRouteParams {
-  id: string;
+  _id: ObjectId;
   name: string;
   email: string;
   phone: string;
